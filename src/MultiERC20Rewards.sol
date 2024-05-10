@@ -6,10 +6,10 @@ import { SafeTransferLib } from "@solmate/utils/SafeTransferLib.sol";
 import { Owned } from "@solmate/auth/Owned.sol";
 
 
-/// @dev A token inheriting from ERC20Rewards will reward token holders with a rewards token.
+/// @dev A token inheriting from MultiERC20Rewards will reward token holders with 0 to MAX_REWARD_TOKENS reward tokens.
 /// The rewarded amount will be a fixed wei per second, distributed proportionally to token holders
 /// by the size of their holdings.
-contract ERC20Rewards is Owned, ERC20 {
+contract MultiERC20Rewards is Owned, ERC20 {
     using SafeTransferLib for ERC20;
     using Cast for uint256;
 
@@ -35,7 +35,7 @@ contract ERC20Rewards is Owned, ERC20 {
         uint128 checkpoint;                             // RewardsPerToken the last time the user rewards were updated
     }
 
-    uint256 public constant MAX_REWARD_TOKENS = 10;                // Maximum number of rewards tokens, important to prevent a gas DoS attack
+    uint256 public constant MAX_REWARD_TOKENS = 10;                // Maximum number of reward tokens, important to prevent a gas DoS attack
 
     ERC20[] public rewardTokens;                                   // Tokens used as rewards
     uint8 public rewardTokensCount;                                // Number of rewards tokens
@@ -206,6 +206,14 @@ contract ERC20Rewards is Owned, ERC20 {
     function claim(address token, address to) public virtual returns (uint256) {
         uint256 claimed = currentUserRewards(token, msg.sender);
         _claim(token, msg.sender, to, claimed);
+
+        return claimed;
+    }
+
+    /// @notice Claim all of one reward token for any user
+    function claim(address token, address user) public virtual returns (uint256) {
+        uint256 claimed = currentUserRewards(token, user);
+        _claim(token, user, user, claimed);
 
         return claimed;
     }
